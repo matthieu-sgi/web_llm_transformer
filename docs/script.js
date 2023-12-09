@@ -1,34 +1,14 @@
 // script.js
 
 // Get the canvas element and its context
-const canvas = document.getElementById('textCanvas');
-const ctx = canvas.getContext('2d');
+// const canvas = document.getElementById('textCanvas');
+// const ctx = canvas.getContext('2d');
+const dynamicText = document.getElementById('dynamicText');
 
-
-// async function loadVocab() {
-//     console.log("Loading vocab...");
-//     const response = await fetch("vocab.json");
-//     const data = await response.json();
-
-//     return data;
-// }
-
-// fetch vocab from json file and put it in a global variable
+const contextMaxLength = 200;
+const diplayMaxLength = contextMaxLength;
 
 let vocab = null;
-
-// async function loadVocab() {
-//     console.log("Loading vocab...");
-//     fetch("vocab.json")
-//         .then(response => response.json())
-//         .then(data => {
-//             vocab = data;
-//             console.log("Vocab loaded");
-//         });
-// }
-
-
-
 
 
 
@@ -44,12 +24,91 @@ async function initModel() {
 
 }
 
+// let xPos = 10; // Initial x-position for drawing text
+// let yPos = 50; // Initial y-position for drawing text
+
+// async function updateCanvas(text) {
+//     ctx.clearRect(0, 0, canvas.width, canvas.height);
+//     ctx.font = '30px serif';
+
+//     // Split text into lines based on canvas width
+//     const lines = [];
+//     const maxWidth = canvas.width - 20; // Adjust as needed
+//     let currentLine = '';
+
+//     for (let i = 0; i < text.length; i++) {
+//         const testLine = currentLine + text[i];
+//         const testWidth = ctx.measureText(testLine).width;
+//         if (testWidth > maxWidth && i > 0) {
+//             lines.push(currentLine);
+//             currentLine = text[i];
+//         } else {
+//             currentLine = testLine;
+//         }
+//     }
+
+//     lines.push(currentLine);
+
+//     // Draw text lines on the canvas
+//     for (const line of lines) {
+//         ctx.fillText(line, xPos, yPos);
+//         yPos += 40; // Adjust the line height as needed
+//     }
+
+//     // Slide text when it touches the end of the canvas
+//     if (yPos > canvas.height) {
+//         yPos = 50; // Reset y-position
+//     }
+// }
+
+async function updateText(newChar) {
+
+    // Append the new text to the existing content
+    dynamicText.textContent += newChar;
+
+    // Scroll the dynamicTextElement to the bottom and add a newline character
+    // dynamicText.textContent += '\n';
+    dynamicText.scrollTop = dynamicText.scrollHeight;
+
+    // Add a newline character if the text is too long
+    
+
+    // Remove the first character if the text is too long
+    if (dynamicText.textContent.length > diplayMaxLength) {
+        dynamicText.textContent = dynamicText.textContent.slice(1);
+    }
+    // if (dynamicText.textContent.length > diplayMaxLength) {
+    //     // Find the index of the first newline character (\n)
+    //     const newlineIndex = dynamicText.textContent.indexOf('\n');
+
+    //     // Remove the first line (including the newline character)
+    //     dynamicText.textContent = dynamicText.textContent.slice(newlineIndex + 1);
+    // }
+}
+
+
+// React to page resize and update canvas size
+// window.addEventListener('resize', () => {
+//     updateCanvasSize();
+//     updateCanvas(); // Redraw the canvas when the size changes
+// });
+
+// function updateCanvasSize() {
+//     // Set canvas dimensions based on the window size
+//     canvas.width = window.innerWidth * 0.8; // Adjust the width as needed
+//     canvas.height = window.innerHeight * 0.6; // Adjust the height as needed
+// }
+
+// // Initial canvas size setup
+// updateCanvasSize();
+
 
 // Generate text from a prompt
 
-async function generateText(prompt = 'hello') {
+async function generateText(prompt) {
+    // TODO: Optimization : Avoid encoding the prompt at each step
     // encode prompt
-    console.log("Generating text...");
+    // console.log("Generating text...");
     console.log(prompt);
     prompt = prompt.toLowerCase();
     prompt = prompt.split('').map(c => vocab.char_to_id[c]);
@@ -60,17 +119,50 @@ async function generateText(prompt = 'hello') {
 
     // Run inference
     const output = await model.run({'input':input});
-    console.log(output);
+    // console.log(output);
     // Get the predicted next character
-    const nextChar = output.output.data;
+    const output_data = output.output.data;
 
-    const sum = nextChar.reduce((a, b) => a + Math.exp(b), 0);
-    const normalized = nextChar.map(x => Math.exp(x) / sum);
+    const sum = output_data.reduce((a, b) => a + Math.exp(b), 0);
+    const normalized = output_data.map(x => Math.exp(x) / sum);
     
-    // Return the next character
-    console.log("Next character:");
-    console.log(normalized);
 
+    //! Sampling from the distribution
+    // Cumulative distribution function
+    const cdf = [];
+    let sum2 = 0;
+    for (let i = 0; i < normalized.length; i++) {
+        sum2 += normalized[i];
+        cdf.push(sum2);
+    }
+    // console.log("CDF:");
+    // console.log(cdf);
+
+    // Sample from the CDF
+
+    const r = Math.random();
+    // console.log("r:");
+    // console.log(r);
+
+    let nextCharId = 0;
+    for (let i = 0; i < cdf.length; i++) {
+        if (r < cdf[i]) {
+            nextCharId = i;
+            break;
+        }
+    }
+
+    // console.log("Next character id:");
+    // console.log(nextCharId);
+
+    const nextChar = vocab.id_to_char[nextCharId];
+
+    // console.log("Next character:");
+    // console.log(nextChar);
+
+    // Update the prompt
+    return nextChar;
+    
     
 
 }
@@ -95,7 +187,23 @@ fetch("vocab.json")
     await initModel();
 
     // Generate text from the prompt
-    let prompt = 'hello';
-    generateText(prompt);
+    let context = 'hello';
+    let displayedText = context;
+
+    updateText(displayedText);
+
+    // Generate a new character every 100ms and update the canvas 
+    setInterval(async () => {
+        // console.log("Contextsize : " + context.length);
+        nextChar = await generateText(context).catch(err => console.log("Error : "+err));
+        context += nextChar;
+        if (context.length > contextMaxLength) {
+            context = context.slice(1);
+        }
+        
+        updateText(nextChar);
+    }, 100);
+
+
 
 })();
