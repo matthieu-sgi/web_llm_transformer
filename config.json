@@ -6,6 +6,5 @@
     "max_iters": 32000,
     "n_embd": 512,
     "n_head": 4,
-    "n_layer": 4,
-    "vocab_size": 41
+    "n_layer": 4
 }

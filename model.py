@@ -1,6 +1,6 @@
 import math
 import inspect
-import tiktoken
+# import tiktoken
 import torch
 import torch.nn as nn
 

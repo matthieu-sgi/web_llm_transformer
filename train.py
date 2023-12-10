@@ -3,8 +3,7 @@ from calendar import c
 from multiprocessing import context
 import os
 import time
-from uu import decode
-from model import GPT
+from modules.model import GPT
 from modules.tokenizer import Tokenizer
 from torchsummary import summary
 
@@ -73,22 +72,25 @@ def get_lr(it, warmup_iters = 2000, learning_rate = LR, lr_decay_iters = 600000,
 
 if __name__ =='__main__':
 
-    json_to_load = json.load(open('./vocab/vocab.json', 'r'))
 
-    char_to_id = json_to_load['char_to_id']
-    vocab_size = json_to_load['vocab_size']
-    decoder  = json_to_load['id_to_char']
+    with open('dataset/Harry_Potter_all_books_preprocessed.txt', 'r') as f:
+        train_data = f.readlines()
 
 
 
-
-
-    print(vocab_size, char_to_id)
-    enc_train_data = [char_to_id[t] for t in train_data][0]
+    enc = Tokenizer()
+    enc.fit(train_data[0])
+    print(enc.vocab_size, enc.char_to_id)
+    enc_train_data = [enc.encode(t) for t in train_data][0]
     np.random.seed(0)
     ratio = 0.8
 
     # Write the vocab size to config.json
+    config['vocab_size'] = enc.vocab_size
+    with open('config.json', 'w') as f:
+        json.dump(config, f, indent=4, sort_keys=True)
+    
+
     # Split the dataset into training and validation sets
     val_data = np.array(enc_train_data[int(ratio * len(enc_train_data)):])
     train_data = np.array(enc_train_data[:int(ratio * len(enc_train_data))])
@@ -104,7 +106,7 @@ if __name__ =='__main__':
     # num_tokens = len(enc_train_data)
     # print("Number of tokens in the dataset: ", num_tokens)
     
-    model = GPT(vocab_size=vocab_size,
+    model = GPT(vocab_size=enc.vocab_size,
                 block_size=BLOCK_SIZE,
                 n_layer=N_LAYER,
                 n_head=N_HEAD,
@@ -154,7 +156,7 @@ if __name__ =='__main__':
                             'optimized_model': model.state_dict(),
                             'model' : unoptimized_model.state_dict(),
                             'optimizer': optimizer.state_dict(),
-                            'model_args': (vocab_size, BLOCK_SIZE, N_LAYER, N_HEAD, N_EMBED, DROPOUT),  
+                            'model_args': (enc.vocab_size, BLOCK_SIZE, N_LAYER, N_HEAD, N_EMBED, DROPOUT),  
                             'iter_num': iter_num,
                             'best_val_loss': best_val_loss,
                         }
@@ -198,6 +200,6 @@ if __name__ =='__main__':
         context = torch.zeros((1,1), dtype=torch.long, device=DEVICE)
         out = model.generate(context, 100)
 
-        print(decoder[out[0].cpu().tolist()])
+        print(enc.decode(out[0].cpu().tolist()))
 
 

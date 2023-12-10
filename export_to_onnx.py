@@ -1,10 +1,12 @@
 '''Export the last checkpoint to onnx format'''
 
-from sklearn import dummy
 import torch
 import json
 from model import GPT
 import onnx
+
+
+EXPORT_PATH = './docs/gpt.onnx'
 
 # Load the last checkpoint
 
@@ -21,7 +23,7 @@ model = GPT(vocab_size,
 
 
 
-loaded_model = torch.load('./models/ckpt.pt')['model']
+loaded_model = torch.load('./models/gptV1.pt', map_location=torch.device('cpu'))['model']
 # print(loaded_model.keys())
 model.to('cpu')
 
@@ -33,7 +35,7 @@ dummy_input = torch.rand(1, 50).type(torch.LongTensor)
 
 torch.onnx.export(model,
                   dummy_input,
-                  'gpt.onnx',
+                  EXPORT_PATH,
                   input_names=['input'],
                   output_names=['output'],
                   do_constant_folding=True,
@@ -42,5 +44,5 @@ torch.onnx.export(model,
                                 'output': {0: 'batch_size', 1: 'seq_len'}})
 
 # Load the model from onnx format
-onnx_model = onnx.load('gpt.onnx')
+onnx_model = onnx.load(EXPORT_PATH)
 onnx.checker.check_model(onnx_model)
