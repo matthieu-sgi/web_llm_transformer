@@ -61,49 +61,33 @@ async function initModel() {
 //     }
 // }
 
-async function updateText(newChar) {
+let bufferText = "";
 
+async function updateText(newChar) {
+    bufferText += newChar;
+
+    if (bufferText[0] == ' ' && bufferText[1] == '.'){
+        bufferText = bufferText.slice(1);
+        bufferText = bufferText[0] + ' ' + bufferText[1].toUpperCase();
+    }
+
+    if (bufferText.length > 3){
     // Append the new text to the existing content
     dynamicText.textContent += newChar;
 
     // Scroll the dynamicTextElement to the bottom and add a newline character
     // dynamicText.textContent += '\n';
     dynamicText.scrollTop = dynamicText.scrollHeight;
-
-    // Add a newline character if the text is too long
     
 
     // Remove the first character if the text is too long
     if (dynamicText.textContent.length > diplayMaxLength) {
         dynamicText.textContent = dynamicText.textContent.slice(1);
     }
-    // if (dynamicText.textContent.length > diplayMaxLength) {
-    //     // Find the index of the first newline character (\n)
-    //     const newlineIndex = dynamicText.textContent.indexOf('\n');
-
-    //     // Remove the first line (including the newline character)
-    //     dynamicText.textContent = dynamicText.textContent.slice(newlineIndex + 1);
-    // }
+    bufferText = bufferText.slice(1);
+    }
 }
 
-
-// React to page resize and update canvas size
-// window.addEventListener('resize', () => {
-//     updateCanvasSize();
-//     updateCanvas(); // Redraw the canvas when the size changes
-// });
-
-// function updateCanvasSize() {
-//     // Set canvas dimensions based on the window size
-//     canvas.width = window.innerWidth * 0.8; // Adjust the width as needed
-//     canvas.height = window.innerHeight * 0.6; // Adjust the height as needed
-// }
-
-// // Initial canvas size setup
-// updateCanvasSize();
-
-
-// Generate text from a prompt
 
 async function generateText(prompt) {
     // TODO: Optimization : Avoid encoding the prompt at each step
