@@ -24,48 +24,14 @@ async function initModel() {
 
 }
 
-// let xPos = 10; // Initial x-position for drawing text
-// let yPos = 50; // Initial y-position for drawing text
 
-// async function updateCanvas(text) {
-//     ctx.clearRect(0, 0, canvas.width, canvas.height);
-//     ctx.font = '30px serif';
-
-//     // Split text into lines based on canvas width
-//     const lines = [];
-//     const maxWidth = canvas.width - 20; // Adjust as needed
-//     let currentLine = '';
-
-//     for (let i = 0; i < text.length; i++) {
-//         const testLine = currentLine + text[i];
-//         const testWidth = ctx.measureText(testLine).width;
-//         if (testWidth > maxWidth && i > 0) {
-//             lines.push(currentLine);
-//             currentLine = text[i];
-//         } else {
-//             currentLine = testLine;
-//         }
-//     }
-
-//     lines.push(currentLine);
-
-//     // Draw text lines on the canvas
-//     for (const line of lines) {
-//         ctx.fillText(line, xPos, yPos);
-//         yPos += 40; // Adjust the line height as needed
-//     }
-
-//     // Slide text when it touches the end of the canvas
-//     if (yPos > canvas.height) {
-//         yPos = 50; // Reset y-position
-//     }
-// }
 
 let bufferText = "";
 
 async function updateText(newChar) {
     bufferText += newChar;
 
+    console.log("Buffer text : " + bufferText);
     if (bufferText[0] == ' ' && bufferText[1] == '.'){
         bufferText = bufferText.slice(1);
         bufferText = bufferText[0] + ' ' + bufferText[1].toUpperCase();
@@ -73,7 +39,7 @@ async function updateText(newChar) {
 
     if (bufferText.length > 3){
     // Append the new text to the existing content
-    dynamicText.textContent += newChar;
+    dynamicText.textContent += bufferText[0];
 
     // Scroll the dynamicTextElement to the bottom and add a newline character
     // dynamicText.textContent += '\n';
@@ -93,10 +59,10 @@ async function generateText(prompt) {
     // TODO: Optimization : Avoid encoding the prompt at each step
     // encode prompt
     // console.log("Generating text...");
-    console.log(prompt);
+    // console.log(prompt);
     prompt = prompt.toLowerCase();
     prompt = prompt.split('').map(c => vocab.char_to_id[c]);
-    console.log(prompt);
+    // console.log(prompt);
     // Convert the prompt to a Tensor
     // const input = ort.tensor(prompt, [1, prompt.length], 'int32');
     const input = new ort.Tensor('int64', prompt, [1, prompt.length] );
