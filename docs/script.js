@@ -15,14 +15,15 @@ let vocab = null;
 
 
 
-const modelPath = 'gpt.onnx';
+const modelPath = 'gpt.onnx.quantized.onnx';
 
 var model = null;
 
 // Initialize ONNX Runtime
 async function initModel() {
     // Load the ONNX model
-    model = await ort.InferenceSession.create(modelPath);
+    console.log("loading model");
+    model = await ort.InferenceSession.create(modelPath, {executionProviders: ['wasm'], graphOptimizationLevel: 'all'});
     console.log("Model loaded");
 
 }
@@ -31,18 +32,16 @@ async function initModel() {
 
 let bufferText = "";
 
-async function updateText(newChar) {
-    bufferText += newChar;
+async function updateText(displayedText) {
+    // bufferText += newChar;
 
-    console.log("Buffer text : " + bufferText);
-    if (bufferText[0] == ' ' && bufferText[1] == '.'){
-        bufferText = bufferText.slice(1);
-        bufferText = bufferText[0] + ' ' + bufferText[1].toUpperCase();
-    }
-
-    if (bufferText.length > 3){
+    // if (bufferText[0] == ' ' && bufferText[1] == '.'){
+    //     bufferText = bufferText.slice(1);
+    //     bufferText = bufferText[0] + ' ' + bufferText[1].toUpperCase();
+    // }
+    // if (bufferText.length > 3){
     // Append the new text to the existing content
-    dynamicText.textContent += bufferText[0];
+    dynamicText.textContent += displayedText[0];
 
     // Scroll the dynamicTextElement to the bottom and add a newline character
     // dynamicText.textContent += '\n';
@@ -53,20 +52,18 @@ async function updateText(newChar) {
     if (dynamicText.textContent.length > diplayMaxLength) {
         dynamicText.textContent = dynamicText.textContent.slice(1);
     }
-    bufferText = bufferText.slice(1);
-    }
+    // }
 }
 
 
 async function generateText(prompt) {
-    // TODO: Optimization : Avoid encoding the prompt at each step
     // encode prompt
 
 
     
     // console.log(prompt);
     // Convert the prompt to a Tensor
-    const input = new ort.Tensor('int64', prompt, [1, prompt.length] );
+        const input = new ort.Tensor('int32', prompt, [1, prompt.length] );
 
     // Run inference
     const output = await model.run({'input':input});
@@ -104,7 +101,7 @@ async function generateText(prompt) {
     }
 
     // console.log("Next character id:");
-    console.log(nextCharId);
+    // console.log(nextCharId);
     return nextCharId;
     
 
@@ -120,22 +117,27 @@ async function generateText(prompt) {
     let displayedText = "";
 
     updateText(displayedText);
-    // let encoded = encode(context);
-    // console.log("Encoded text : " + encoded);
-    // type of the encoded text 
-    // console.log(typeof(encoded));
-    // console.log("Decoded text : " + decode(encoded));
+
     // // Generate a new character every 100ms and update the canvas 
     setInterval(async () => {
-        // console.log("Contextsize : " + context.length);
-        context.push(await generateText(context).catch(err => console.log("Error : "+err)));
-        // context += nextChar;
-        console.log(context);
-        if (context.length > contextMaxLength) {
-            context = context.slice(1);
+        if (displayedText.length < 20) {
+            displayedText = displayedText.slice(1);
+            // console.log("Contextsize : " + context.length);
+            context.push(await generateText(context).catch(err => console.log("Error : "+err)));
+            // context += nextChar;
+            // console.log(context);
+            if (context.length > contextMaxLength) {
+                context = context.slice(1);
+            }
+            displayedText +=  decode([context[context.length-1]])
         }
-        
-        updateText(decode([context[context.length-1]]));
+        // console.log("Displayed text length" + displayedText.length);
+        updateText(displayedText).then(() => {
+            // console.log("Text updated");
+            displayedText = displayedText.slice(1);
+            // console.log("New length" + displayedText.length)
+        }
+            );
     }, 100);
 
 
