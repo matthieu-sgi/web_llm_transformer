@@ -6,6 +6,7 @@ import time
 from modules.model import GPT
 from modules.tokenizer import Tokenizer
 from torchsummary import summary
+from torch.utils.tensorboard import SummaryWriter
 
 import json
 import math
@@ -79,17 +80,13 @@ if __name__ =='__main__':
 
 
     enc = Tokenizer()
-    enc.fit(train_data[0])
-    print(enc.vocab_size, enc.char_to_id)
+    # enc.fit(train_data[0])
+    print(len(enc))
     enc_train_data = [enc.encode(t) for t in train_data][0]
     np.random.seed(0)
     ratio = 0.8
 
-    # Write the vocab size to config.json
-    config['vocab_size'] = enc.vocab_size
-    with open('config.json', 'w') as f:
-        json.dump(config, f, indent=4, sort_keys=True)
-    
+
 
     # Split the dataset into training and validation sets
     val_data = np.array(enc_train_data[int(ratio * len(enc_train_data)):])
@@ -114,10 +111,13 @@ if __name__ =='__main__':
                 dropout=DROPOUT)
     
     model.to('cuda')
+
+    writer = SummaryWriter()
     
     dummy_input = torch.zeros(1, BLOCK_SIZE, dtype=torch.long).cuda()
     output = model(dummy_input)
-
+    # print(output)    
+    # writer.add_graph(model = model, input_to_model=dummy_input)
     iter_num = 0
     best_val_loss = 1e9
 
@@ -135,6 +135,8 @@ if __name__ =='__main__':
     X, Y = get_batch('train') # fetch the very first batch
     t0 = time.time()
     local_iter_num = 0 # number of iterations in the lifetime of this process
+
+    print("Starting training...")
 
     try : 
         while True:
@@ -156,12 +158,24 @@ if __name__ =='__main__':
                             'optimized_model': model.state_dict(),
                             'model' : unoptimized_model.state_dict(),
                             'optimizer': optimizer.state_dict(),
-                            'model_args': (enc.vocab_size, BLOCK_SIZE, N_LAYER, N_HEAD, N_EMBED, DROPOUT),  
+                            'model_args': (len(enc), BLOCK_SIZE, N_LAYER, N_HEAD, N_EMBED, DROPOUT),  
                             'iter_num': iter_num,
                             'best_val_loss': best_val_loss,
                         }
                         print(f"saving checkpoint to {OUT_DIR}")
                         torch.save(checkpoint, os.path.join(OUT_DIR, 'ckpt.pt'))
+                else:
+                    print("Saving the probably overfitting model")
+                    checkpoint = {
+                        'optimized_model': model.state_dict(),
+                        'model' : unoptimized_model.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'model_args': (len(enc), BLOCK_SIZE, N_LAYER, N_HEAD, N_EMBED, DROPOUT),  
+                        'iter_num': iter_num,
+                        'best_val_loss': best_val_loss,
+                    }
+                    print(f"saving checkpoint to {OUT_DIR}")
+                    torch.save(checkpoint, os.path.join(OUT_DIR, 'overfitting_ckpt.pt'))
 
             # forward backward update, with optional gradient accumulation to simulate larger batch size
             # and using the GradScaler if data type is float16
@@ -174,11 +188,16 @@ if __name__ =='__main__':
                 X, Y = get_batch('train')
                 # backward pass, with gradient scaling if training in fp16
                 loss.backward()
+
             # step the optimizer and scaler if training in fp16
             optimizer.step()
             # flush the gradients as soon as we can, no need for this memory anymore
             optimizer.zero_grad(set_to_none=True)
 
+            writer.add_scalar('Learning rate', lr, iter_num)
+            writer.add_scalar('Loss/val', losses['val'], iter_num)
+            writer.add_scalar('Loss/train', losses['train'], iter_num)    
+            
             # timing and logging
             t1 = time.time()
             dt = t1 - t0
@@ -199,7 +218,8 @@ if __name__ =='__main__':
 
         context = torch.zeros((1,1), dtype=torch.long, device=DEVICE)
         out = model.generate(context, 100)
-
+        writer.close()
         print(enc.decode(out[0].cpu().tolist()))
+
 
 
