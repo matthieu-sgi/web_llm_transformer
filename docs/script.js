@@ -7,10 +7,9 @@ import { encode, decode } from "https://deno.land/x/gpt_2_3_tokenizer@v0.0.2/mod
 const dynamicText = document.getElementById('dynamicText');
 const modelStateText = document.getElementById('modelStateText');
 
-const contextMaxLength = 200;
+const contextMaxLength = 128;
 const diplayMaxLength = contextMaxLength;
 
-let vocab = null;
 
 
 
@@ -59,11 +58,14 @@ async function generateText(prompt) {
 
 
     
-    // console.log(prompt);
+    // console.log("Creating tensor");
     // Convert the prompt to a Tensor
         const input = new ort.Tensor('int32', prompt, [1, prompt.length] );
 
     // Run inference
+    console.log("Running inference");
+    console.log(input);
+    console.log("Input shape:" + input.dims);
     const output = await model.run({'input':input});
     // console.log(output);
     // Get the predicted next character
@@ -75,14 +77,13 @@ async function generateText(prompt) {
 
     //! Sampling from the distribution
     // Cumulative distribution function
+    // console.log("CDF");
     const cdf = [];
     let sum2 = 0;
     for (let i = 0; i < normalized.length; i++) {
         sum2 += normalized[i];
         cdf.push(sum2);
     }
-    // console.log("CDF:");
-    // console.log(cdf);
 
     // Sample from the CDF
 
@@ -113,7 +114,9 @@ async function generateText(prompt) {
     });
 
     // Generate text from the prompt
-    let context = [20];
+    //random int generator
+    let context = [Math.floor(Math.random() * 50000)];
+    // let context = [20];
     let displayedText = "";
 
     // updateText(displayedText);
@@ -134,14 +137,14 @@ async function generateText(prompt) {
             // console.log("Text updated");
             // console.log(displayedText);
             displayedText = displayedText.slice(1);
-            if (displayedText[0] == ' ' && displayedText[1] == '.'){
+            if (displayedText[0] == ' ' && (displayedText[1] == '.' || displayedText[1] == ',' || displayedText[1] == '?' || displayedText[1] == '!')){
                 displayedText = displayedText.slice(1);
                 displayedText = displayedText[0] + ' ' + displayedText[1].toUpperCase() + displayedText.slice(2);
             }
             // console.log("New length" + displayedText.length)
         }
             );
-    }, 100);
+    }, 10);
 
 
 
