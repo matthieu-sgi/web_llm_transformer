@@ -3,6 +3,7 @@
 // Get the canvas element and its context
 // const canvas = document.getElementById('textCanvas');
 // const ctx = canvas.getContext('2d');
+import { encode, decode } from "https://deno.land/x/gpt_2_3_tokenizer@v0.0.2/mod.js"
 const dynamicText = document.getElementById('dynamicText');
 
 const contextMaxLength = 200;
@@ -15,6 +16,8 @@ let vocab = null;
 
 
 const modelPath = 'gpt.onnx';
+
+var model = null;
 
 // Initialize ONNX Runtime
 async function initModel() {
@@ -58,13 +61,11 @@ async function updateText(newChar) {
 async function generateText(prompt) {
     // TODO: Optimization : Avoid encoding the prompt at each step
     // encode prompt
-    // console.log("Generating text...");
-    // console.log(prompt);
-    prompt = prompt.toLowerCase();
-    prompt = prompt.split('').map(c => vocab.char_to_id[c]);
+
+
+    
     // console.log(prompt);
     // Convert the prompt to a Tensor
-    // const input = ort.tensor(prompt, [1, prompt.length], 'int32');
     const input = new ort.Tensor('int64', prompt, [1, prompt.length] );
 
     // Run inference
@@ -103,55 +104,38 @@ async function generateText(prompt) {
     }
 
     // console.log("Next character id:");
-    // console.log(nextCharId);
-
-    const nextChar = vocab.id_to_char[nextCharId];
-
-    // console.log("Next character:");
-    // console.log(nextChar);
-
-    // Update the prompt
-    return nextChar;
-    
+    console.log(nextCharId);
+    return nextCharId;
     
 
-}
-
-async function loadVocab() {
-
-fetch("vocab.json")
-    .then(response => response.json())
-    .then(data => {
-        vocab = data;
-        console.log("Vocab loaded");
-        console.log("Vocab:");
-        console.log(vocab);
-
-    });
 }
 
 
 (async () => {
-    await loadVocab();
 
     await initModel();
 
     // Generate text from the prompt
-    let context = 'hello';
-    let displayedText = context;
+    let context = [20];
+    let displayedText = "";
 
     updateText(displayedText);
-
-    // Generate a new character every 100ms and update the canvas 
+    // let encoded = encode(context);
+    // console.log("Encoded text : " + encoded);
+    // type of the encoded text 
+    // console.log(typeof(encoded));
+    // console.log("Decoded text : " + decode(encoded));
+    // // Generate a new character every 100ms and update the canvas 
     setInterval(async () => {
         // console.log("Contextsize : " + context.length);
-        nextChar = await generateText(context).catch(err => console.log("Error : "+err));
-        context += nextChar;
+        context.push(await generateText(context).catch(err => console.log("Error : "+err)));
+        // context += nextChar;
+        console.log(context);
         if (context.length > contextMaxLength) {
             context = context.slice(1);
         }
         
-        updateText(nextChar);
+        updateText(decode([context[context.length-1]]));
     }, 100);
 
 
