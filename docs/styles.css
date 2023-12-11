@@ -16,21 +16,47 @@ canvas {
     height: auto; /* Allow the canvas to scale proportionally */
 }
 
+/* Put modelStateText above dynamicText */
+
+#modelStateText {
+    position: absolute;
+    top: 0%;
+    left: 45%;
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 2; /* Adjusted z-index to be higher than #dynamicText */
+}
+
 /* Limit the dynamicText */
 
 #dynamicText {
-    max-width: 80%; /* Adjust the maximum width as needed */
-    max-height: 80vh; /* Adjust the maximum height as needed */
+    max-width: 80%;
+    max-height: 80vh;
     width: auto;
     height: auto;
     position: absolute;
-    top: 50%; /* Center vertically */
-    left: 50%; /* Center horizontally */
-    transform: translate(-50%, -50%); /* Center both horizontally and vertically */
-    padding: 20px; /* Add some padding for better readability */
-    background-color: #f0f0f0; /* Example background color */
-    border-radius: 10px; /* Example border-radius for a rounded appearance */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Example box shadow for depth */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     z-index: 1;
-    overflow-y: auto; /* Enable vertical scrolling when content exceeds the height */
+    overflow-y: auto;
+}
+
+.descriptionText{
+    font-size: 20px;
+    font-weight: bold;
+    color: #311ca8;
+    margin-bottom: 10px;
+    position: absolute;
+    /* text alignment center */
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, 0);
+
 }

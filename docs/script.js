@@ -5,6 +5,7 @@
 // const ctx = canvas.getContext('2d');
 import { encode, decode } from "https://deno.land/x/gpt_2_3_tokenizer@v0.0.2/mod.js"
 const dynamicText = document.getElementById('dynamicText');
+const modelStateText = document.getElementById('modelStateText');
 
 const contextMaxLength = 200;
 const diplayMaxLength = contextMaxLength;
@@ -35,10 +36,7 @@ let bufferText = "";
 async function updateText(displayedText) {
     // bufferText += newChar;
 
-    // if (bufferText[0] == ' ' && bufferText[1] == '.'){
-    //     bufferText = bufferText.slice(1);
-    //     bufferText = bufferText[0] + ' ' + bufferText[1].toUpperCase();
-    // }
+    
     // if (bufferText.length > 3){
     // Append the new text to the existing content
     dynamicText.textContent += displayedText[0];
@@ -109,20 +107,20 @@ async function generateText(prompt) {
 
 
 (async () => {
-
-    await initModel();
+    modelStateText.textContent = "Loading model";
+    await initModel().then(() => {
+        modelStateText.textContent = "Model loaded";
+    });
 
     // Generate text from the prompt
     let context = [20];
     let displayedText = "";
 
-    updateText(displayedText);
+    // updateText(displayedText);
 
     // // Generate a new character every 100ms and update the canvas 
     setInterval(async () => {
         if (displayedText.length < 20) {
-            displayedText = displayedText.slice(1);
-            // console.log("Contextsize : " + context.length);
             context.push(await generateText(context).catch(err => console.log("Error : "+err)));
             // context += nextChar;
             // console.log(context);
@@ -134,7 +132,12 @@ async function generateText(prompt) {
         // console.log("Displayed text length" + displayedText.length);
         updateText(displayedText).then(() => {
             // console.log("Text updated");
+            // console.log(displayedText);
             displayedText = displayedText.slice(1);
+            if (displayedText[0] == ' ' && displayedText[1] == '.'){
+                displayedText = displayedText.slice(1);
+                displayedText = displayedText[0] + ' ' + displayedText[1].toUpperCase() + displayedText.slice(2);
+            }
             // console.log("New length" + displayedText.length)
         }
             );
