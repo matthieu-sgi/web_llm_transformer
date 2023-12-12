@@ -91,17 +91,7 @@ if __name__ =='__main__':
     # Split the dataset into training and validation sets
     val_data = np.array(enc_train_data[int(ratio * len(enc_train_data)):])
     train_data = np.array(enc_train_data[:int(ratio * len(enc_train_data))])
-    # print("Length of training dataset: ", len(train_data))
-    # print("Length of validation dataset: ", len(val_data))
 
-
-    # Calculate the singularity of the dataset
-    # singularity = len(set(enc_train_data))
-    # print("Singularity of the dataset: ", singularity)
-
-    # # Calculate number of tokens in the dataset
-    # num_tokens = len(enc_train_data)
-    # print("Number of tokens in the dataset: ", num_tokens)
     
     model = GPT(vocab_size=enc.vocab_size,
                 block_size=BLOCK_SIZE,

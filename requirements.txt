@@ -1,4 +1,5 @@
 onnx
+tiktoken
 -i https://download.pytorch.org/whl/cpu
 torch
 torchvision
