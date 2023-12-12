@@ -137,14 +137,14 @@ async function generateText(prompt) {
             // console.log("Text updated");
             // console.log(displayedText);
             displayedText = displayedText.slice(1);
-            if (displayedText[0] == ' ' && (displayedText[1] == '.' || displayedText[1] == ',' || displayedText[1] == '?' || displayedText[1] == '!')){
-                displayedText = displayedText.slice(1);
-                displayedText = displayedText[0] + ' ' + displayedText[1].toUpperCase() + displayedText.slice(2);
-            }
+            // if (displayedText[0] == ' ' && (displayedText[1] == '.' || displayedText[1] == ',' || displayedText[1] == '?' || displayedText[1] == '!')){
+            //     displayedText = displayedText.slice(1);
+            //     displayedText = displayedText[0] + ' ' + displayedText[1].toUpperCase() + displayedText.slice(2);
+            // }
             // console.log("New length" + displayedText.length)
         }
             );
-    }, 10);
+    }, 100);
 
 
 
