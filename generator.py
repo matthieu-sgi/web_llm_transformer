@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # with_my_toeknizer()
     config = json.load(open('config.json'))
     # vocab_size = json.load(open('./vocab/vocab.json'))['vocab_size']
-    tokenizer = Tokenizer(vocab_file='./vocab/vocab.json')
+    tokenizer = Tokenizer()
 
     model = GPT(tokenizer.vocab_size,
                 config['block_size'],
@@ -21,7 +21,7 @@ if __name__ == '__main__':
                 config['n_embd'],
                 config['dropout'])
     
-    load_weights = torch.load('./models/gptV1.pt')
+    load_weights = torch.load('./models/overfitting_ckpt.pt')
     model.load_state_dict(load_weights['model'])
     model.eval()
 

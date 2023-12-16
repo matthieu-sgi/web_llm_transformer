@@ -74,15 +74,28 @@ def get_lr(it, warmup_iters = 2000, learning_rate = LR, lr_decay_iters = 600000,
 if __name__ =='__main__':
 
 
-    with open('dataset/Harry_Potter_all_books_preprocessed.txt', 'r') as f:
+    with open('dataset/code_civil.txt', 'r') as f:
         train_data = f.readlines()
 
+    # with open('dataset/Harry_Potter_all_books_preprocessed.txt', 'r') as f:
+    #     train_data = f.readlines()
 
 
+    # print(train_data)
     enc = Tokenizer()
     # enc.fit(train_data[0])
-    print(len(enc))
+    # print(len(enc))
+    train_data = ''.join(train_data)
+    train_data = [train_data]
+    # print(train_data)
+    # train_data = [x.strip() for x in train_data]
     enc_train_data = [enc.encode(t) for t in train_data][0]
+    # print(enc_train_data)
+    # remove len = 0 item from the list
+    # enc_train_data = [x for x in enc_train_data if x != []]
+
+    # print(enc_train_data)
+    print('Number of tokens :',len(enc_train_data))
     np.random.seed(0)
     ratio = 0.8
 
@@ -91,7 +104,17 @@ if __name__ =='__main__':
     # Split the dataset into training and validation sets
     val_data = np.array(enc_train_data[int(ratio * len(enc_train_data)):])
     train_data = np.array(enc_train_data[:int(ratio * len(enc_train_data))])
+    # print("Length of training dataset: ", len(train_data))
+    # print("Length of validation dataset: ", len(val_data))
 
+
+    # Calculate the singularity of the dataset
+    # singularity = len(set(enc_train_data))
+    # print("Singularity of the dataset: ", singularity)
+
+    # # Calculate number of tokens in the dataset
+    # num_tokens = len(enc_train_data)
+    # print("Number of tokens in the dataset: ", num_tokens)
     
     model = GPT(vocab_size=enc.vocab_size,
                 block_size=BLOCK_SIZE,

@@ -25,7 +25,7 @@ model = GPT(config['vocab_size'],
 
 
 
-loaded_model = torch.load('./models/gtpV3Quantized.pt', map_location=torch.device('cpu'))['model']
+loaded_model = torch.load('./models/ckpt.pt', map_location=torch.device('cpu'))['model']
 # print(loaded_model.keys())
 model.to('cpu')
 
